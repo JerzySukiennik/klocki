@@ -26,6 +26,7 @@ export const PARTS = {
   41539: { name: 'Płytka 8×8' },
   4073: { name: 'Płytka okrągła 1×1' },
   98138: { name: 'Kafelek okrągły 1×1' },
+  '3068b': { name: 'Kafelek 2×2' },
   54200: { name: 'Skos 1×1 (serek)' },
   85984: { name: 'Skos niski 1×2' },
   87087: { name: 'Klocek 1×1 z wypustką z boku' },

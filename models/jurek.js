@@ -91,18 +91,20 @@ function build({ hair, skin, shoes }) {
 
   const arm = (sign) => {
     const i = sign < 0 ? 1 : 4;
-    const socket = { part: '87087', color: BLACK, x: xAt(i), y: yAt(10, 3), z: zAt(2), rot: sign < 0 ? 90 : -90 };
-    const long = { part: '3623', color: BLACK, x: sign * 48, y: -74, z: zAt(2), rz: sign * 90, step: 7 };
-    const short = { part: '3023', color: BLACK, x: sign * 48, y: -84, z: zAt(2), rz: sign * 90, step: 7 };
-    const hand = (part, y) => ({ part, color: skin, x: sign * 56, y, z: zAt(2), rz: sign * 90, step: 7 });
+    const socket = (j) => ({ part: '87087', color: BLACK, x: xAt(i), y: yAt(10, 3), z: zAt(j), rot: sign < 0 ? 90 : -90 });
+    const plain = (j) => ({ part: '3005', color: BLACK, x: xAt(i), y: yAt(10, 3), z: zAt(j), rot: 0 });
+    const side = (part, color, layer, y, j = 1.5) => ({ part, color, x: sign * (48 + 8 * layer), y, z: zAt(j), rz: sign * 90, step: 7 });
+    const upper = side('3021', BLACK, 0, -74);
+    const sleeve = (part) => side(part, BLACK, 1, -84);
+    const palm = { ...side('3023', skin, 1, -54), rx: 90 };
+    const fingers = [1, 2].map((j) => side('4073', skin, 1, -54, j));
     return loose(6, [
-      [socket, long, hand('4073', -54)],
-      [socket, long, hand('3024', -54)],
-      [socket, short, hand('4073', -74)],
-      [socket, short, hand('3024', -74)],
-      [socket, long],
-      [socket, short],
-      [{ part: '3005', color: BLACK, x: xAt(i), y: yAt(10, 3), z: zAt(2), rot: 0 }],
+      [socket(1), socket(2), upper, sleeve('3068b'), palm],
+      [socket(1), socket(2), upper, sleeve('3022'), palm],
+      [socket(1), socket(2), upper, sleeve('3022'), ...fingers],
+      [socket(1), socket(2), upper, ...fingers],
+      [plain(1), socket(2), side('3623', BLACK, 0, -74, 2), side('4073', skin, 1, -54, 2)],
+      [plain(1), plain(2)],
     ]);
   };
 
@@ -235,8 +237,6 @@ function build({ hair, skin, shoes }) {
         plateRun({ axis: 'x', i: 1, j: 3, n: 4, h: 6, color: BLACK, step: 4 }),
         brickSlab({ i: 1, j: 1, n: 4, h: 7, color: BLACK, step: 5 }),
         brickRun({ axis: 'x', i: 1, j: 3, n: 4, h: 7, color: BLACK, step: 5 }),
-        brickRun({ axis: 'x', i: 1, j: 1, n: 1, h: 10, color: BLACK, step: 6 }),
-        brickRun({ axis: 'x', i: 4, j: 1, n: 1, h: 10, color: BLACK, step: 6 }),
         brickRun({ axis: 'x', i: 2, j: 2, n: 2, h: 10, color: BLACK, step: 6 }),
         brickRun({ axis: 'x', i: 1, j: 3, n: 1, h: 10, color: BLACK, step: 6 }),
         brickRun({ axis: 'x', i: 4, j: 3, n: 1, h: 10, color: BLACK, step: 6 }),
@@ -262,8 +262,8 @@ export default {
   size: '4,8 × 4,8 × 8,8 cm',
   notes: {
     2: 'Buty wystają o jedną wypustkę przed nogi.',
-    6: 'Klocki z wypustką z boku: dwa na boki (na ręce), dwa do tyłu (na kaptur). Żółty i biały klocek z przodu to znaczek na bluzie.',
-    7: 'Ręka to czarna płytka wciśnięta pionowo, górnym końcem na boczną wypustkę. Dłoń wchodzi na dolną wypustkę tej płytki.',
+    6: 'Klocki z wypustką z boku: po dwa na każdy bok (na ręce) i dwa do tyłu (na kaptur). Żółty i biały klocek z przodu to znaczek na bluzie.',
+    7: 'Ręka to czarna płytka 2×3 wciśnięta pionowo górą na dwie boczne wypustki. Na jej górę idzie gładki kafelek (rękaw), na sam dół żółta płytka (dłoń).',
     9: 'Głowa jest pusta w środku. Tył już z koloru włosów.',
     10: 'Oko to klocek z wypustką do przodu i czarny okrągły kafelek na wypustce.',
     12: 'Grzywkę przyczep od spodu do przedniej płytki dachu, dopiero potem załóż tę płytkę na głowę.',
