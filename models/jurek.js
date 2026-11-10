@@ -91,34 +91,19 @@ function build({ hair, skin, shoes }) {
 
   const arm = (sign) => {
     const i = sign < 0 ? 1 : 4;
-    const socket = (j) => ({ part: '87087', color: BLACK, x: xAt(i), y: yAt(10, 3), z: zAt(j), rot: sign < 0 ? 90 : -90 });
-    const plain = (j) => ({ part: '3005', color: BLACK, x: xAt(i), y: yAt(10, 3), z: zAt(j), rot: 0 });
-    const side = (part, color, layer, y, j = 1.5) => ({ part, color, x: sign * (48 + 8 * layer), y, z: zAt(j), rz: sign * 90, step: 7 });
-    const upper = side('3021', BLACK, 0, -74);
-    const band = (part, color, layer, y) => ({ ...side(part, color, layer, y), rx: 90 });
-    const shoulder = { part: '85984', color: BLACK, x: sign * 48, y: -94, z: zAt(1.5), rx: -90, rz: sign * 90, step: 7 };
-    const sleeve = (part) => side(part, BLACK, 1, -84);
-    const palm = band('3023', skin, 1, -54);
-    const fingers = [1, 2].map((j) => side('4073', skin, 1, -54, j));
-    const thick = (cuff) => [
-      socket(1),
-      socket(2),
-      upper,
-      shoulder,
-      band('3023', BLACK, 1, -74),
-      band(cuff, BLACK, 2, -74),
-      palm,
-      band('3023', skin, 2, -54),
-    ];
+    const socket = { part: '87087', color: BLACK, x: xAt(i), y: yAt(10, 3), z: zAt(2), rot: sign < 0 ? 90 : -90 };
+    const side = (part, color, layer, y) => ({ part, color, x: sign * (48 + 8 * layer), y, z: zAt(2), rz: sign * 90, step: 7 });
+    const joint = side('4073', BLACK, 0, -94);
+    const limb = (layer) => side('3623', BLACK, layer, -74);
+    const sleeve = (part) => side(part, BLACK, 2, -84);
+    const hand = (part, layer) => side(part, skin, layer, -54);
     return loose(6, [
-      thick('3069b'),
-      thick('3023'),
-      [socket(1), socket(2), upper, sleeve('3068b'), palm],
-      [socket(1), socket(2), upper, sleeve('3022'), palm],
-      [socket(1), socket(2), upper, sleeve('3022'), ...fingers],
-      [socket(1), socket(2), upper, ...fingers],
-      [plain(1), socket(2), side('3623', BLACK, 0, -74, 2), side('4073', skin, 1, -54, 2)],
-      [plain(1), plain(2)],
+      [socket, joint, limb(1), sleeve('3069b'), hand('4073', 2)],
+      [socket, joint, limb(1), sleeve('3023'), hand('4073', 2)],
+      [socket, joint, limb(1), sleeve('3023'), hand('3024', 2)],
+      [socket, joint, limb(1), hand('4073', 2)],
+      [socket, limb(0), hand('4073', 1)],
+      [{ part: '3005', color: BLACK, x: xAt(i), y: yAt(10, 3), z: zAt(2), rot: 0 }],
     ]);
   };
 
@@ -251,6 +236,8 @@ function build({ hair, skin, shoes }) {
         plateRun({ axis: 'x', i: 1, j: 3, n: 4, h: 6, color: BLACK, step: 4 }),
         brickSlab({ i: 1, j: 1, n: 4, h: 7, color: BLACK, step: 5 }),
         brickRun({ axis: 'x', i: 1, j: 3, n: 4, h: 7, color: BLACK, step: 5 }),
+        brickRun({ axis: 'x', i: 1, j: 1, n: 1, h: 10, color: BLACK, step: 6 }),
+        brickRun({ axis: 'x', i: 4, j: 1, n: 1, h: 10, color: BLACK, step: 6 }),
         brickRun({ axis: 'x', i: 2, j: 2, n: 2, h: 10, color: BLACK, step: 6 }),
         brickRun({ axis: 'x', i: 1, j: 3, n: 1, h: 10, color: BLACK, step: 6 }),
         brickRun({ axis: 'x', i: 4, j: 3, n: 1, h: 10, color: BLACK, step: 6 }),
@@ -276,8 +263,8 @@ export default {
   size: '4,8 × 4,8 × 8,8 cm',
   notes: {
     2: 'Buty wystają o jedną wypustkę przed nogi.',
-    6: 'Klocki z wypustką z boku: po dwa na każdy bok (na ręce) i dwa do tyłu (na kaptur). Żółty i biały klocek z przodu to znaczek na bluzie.',
-    7: 'Ręka to czarna płytka 2×3 wciśnięta pionowo górą na dwie boczne wypustki. Na nią od góry: skos cienkim końcem do góry (bark), dwie czarne warstwy (rękaw) i dwie żółte płytki (dłoń).',
+    6: 'Klocki z wypustką z boku: po jednym na każdy bok (na ręce) i dwa do tyłu (na kaptur). Żółty i biały klocek z przodu to znaczek na bluzie.',
+    7: 'Na boczną wypustkę najpierw czarna okrągła płytka (bark), na nią pionowo płytka 1×3. Dzięki podkładce ręka nie dotyka tułowia i da się ją obracać. Na górę kafelek (rękaw), na dół żółta okrągła płytka (dłoń).',
     9: 'Głowa jest pusta w środku. Tył już z koloru włosów.',
     10: 'Oko to klocek z wypustką do przodu i czarny okrągły kafelek na wypustce.',
     12: 'Grzywkę przyczep od spodu do przedniej płytki dachu, dopiero potem załóż tę płytkę na głowę.',
