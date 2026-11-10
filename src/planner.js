@@ -33,7 +33,7 @@ export function plan(model, pile) {
       used.set(key, (used.get(key) || 0) + count);
     }
     const step = group.step ? group.step(cell) : cell.step;
-    for (const p of built) placements.push({ ...p, step, group: group.id });
+    for (const p of built) placements.push({ ...p, step: p.step ?? step, group: group.id });
   };
 
   const recipes = (group, cell) => (group.recipes ? group.recipes(cell) : group.options.map((option) => option.build(cell)));

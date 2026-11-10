@@ -27,6 +27,7 @@ export const PARTS = {
   4073: { name: 'Płytka okrągła 1×1' },
   98138: { name: 'Kafelek okrągły 1×1' },
   54200: { name: 'Skos 1×1 (serek)' },
+  85984: { name: 'Skos niski 1×2' },
   87087: { name: 'Klocek 1×1 z wypustką z boku' },
   3700: { name: 'Klocek Technic 1×2 z otworem' },
   2780: { name: 'Pin Technic z tarciem' },
