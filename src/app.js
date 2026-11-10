@@ -1,21 +1,23 @@
-// Klocki: app flow. Find parts by swiping, review the pile, then follow the step-by-step build.
+// Klocki: app flow. Preview a model, find its parts by swiping, review the pile, then follow the step-by-step build.
 
 import { COLORS, PARTS, splitKey } from './catalog.js';
 import { answer, plan } from './planner.js';
 import { createViewer } from './viewer.js';
+import jurek from '../models/jurek.js';
 import tars from '../models/tars.js';
 
-const MODELS = { tars };
+const MODELS = { jurek, tars };
 const THEMES = ['biel', 'noc', 'papier'];
 const THRESHOLD = 110;
 const $ = (id) => document.getElementById(id);
 
 const state = {
-  model: 'tars',
-  view: 'find',
+  model: 'jurek',
+  view: 'model',
   piles: {},
   history: {},
-  settings: { theme: 'biel', flip: false, scale: 1 },
+  palettes: {},
+  settings: { theme: 'biel', flip: false, scale: 1, model: 'jurek' },
   real: false,
   typed: '',
   step: 0,
@@ -23,11 +25,29 @@ const state = {
 
 const card = $('card');
 const viewer = await createViewer($('canvas'));
+const resolved = new Map();
 let current = null;
 let busy = false;
 let saveTimer = 0;
 
-const model = () => MODELS[state.model];
+function paletteOf(id) {
+  const saved = state.palettes[id] || {};
+  const palette = {};
+  for (const [role, { colors }] of Object.entries(MODELS[id].roles || {})) {
+    palette[role] = colors.includes(saved[role]) ? saved[role] : colors[0];
+  }
+  return palette;
+}
+
+function modelOf(id) {
+  const source = MODELS[id];
+  const palette = paletteOf(id);
+  const key = id + JSON.stringify(palette);
+  if (!resolved.has(key)) resolved.set(key, { ...source, groups: source.build ? source.build(palette) : source.groups });
+  return resolved.get(key);
+}
+
+const model = () => modelOf(state.model);
 const pile = () => (state.piles[state.model] ||= {});
 const past = () => (state.history[state.model] ||= []);
 const plural = (n, one, few, many) => {
@@ -48,7 +68,7 @@ function pxPerLdu() {
 }
 
 function report(id) {
-  const result = plan(MODELS[id], state.piles[id] || {});
+  const result = plan(modelOf(id), state.piles[id] || {});
   return {
     complete: !result.ask.length && !result.gaps.length,
     pile: Object.entries(state.piles[id] || {}).map(([key, entry]) => ({
@@ -70,8 +90,10 @@ async function load() {
       if (!MODELS[id]) continue;
       state.piles[id] = entry.pile || {};
       state.history[id] = entry.history || [];
+      state.palettes[id] = entry.palette || {};
     }
   } catch {}
+  if (MODELS[state.settings.model]) state.model = state.settings.model;
 }
 
 function save() {
@@ -79,7 +101,12 @@ function save() {
   saveTimer = setTimeout(() => {
     const models = {};
     for (const id of Object.keys(MODELS)) {
-      models[id] = { pile: state.piles[id] || {}, report: report(id), history: (state.history[id] || []).slice(-200) };
+      models[id] = {
+        pile: state.piles[id] || {},
+        palette: paletteOf(id),
+        report: report(id),
+        history: (state.history[id] || []).slice(-200),
+      };
     }
     const body = JSON.stringify({ version: 1, updated: new Date().toISOString(), settings: state.settings, models }, null, 2);
     fetch('/api/state', { method: 'PUT', headers: { 'content-type': 'application/json' }, body }).catch(() => {});
@@ -94,6 +121,60 @@ function refresh() {
 
 function paintSwatch(element, color) {
   element.style.background = COLORS[color].hex;
+}
+
+function renderModels() {
+  $('models').replaceChildren(
+    ...Object.values(MODELS).map((entry) => {
+      const button = document.createElement('button');
+      button.textContent = entry.name;
+      button.classList.toggle('on', entry.id === state.model);
+      button.addEventListener('click', () => selectModel(entry.id));
+      return button;
+    }),
+  );
+}
+
+function selectModel(id) {
+  if (id === state.model || busy) return;
+  state.model = id;
+  state.settings.model = id;
+  state.step = 0;
+  renderModels();
+  refresh();
+  save();
+  go(Object.keys(pile()).length ? 'find' : 'model');
+}
+
+function renderRoles() {
+  const palette = paletteOf(state.model);
+  $('roles').replaceChildren(
+    ...Object.entries(MODELS[state.model].roles || {}).map(([role, { label: title, colors }]) => {
+      const button = document.createElement('button');
+      button.className = 'role';
+      button.disabled = colors.length < 2;
+      button.innerHTML = `<i class="swatch"></i><span>${title}</span><b>${COLORS[palette[role]].name}</b>`;
+      paintSwatch(button.querySelector('.swatch'), palette[role]);
+      button.addEventListener('click', () => {
+        const next = colors[(colors.indexOf(palette[role]) + 1) % colors.length];
+        state.palettes[state.model] = { ...palette, [role]: next };
+        refresh();
+        save();
+        renderPreview(true);
+      });
+      return button;
+    }),
+  );
+}
+
+function renderPreview(keepView) {
+  const count = current.placements.length;
+  $('preview-title').textContent = model().name;
+  $('preview-text').textContent = `${count} ${plural(count, 'klocek', 'klocki', 'klocków')} · ${model().size}`;
+  $('preview-go').textContent = current.ask.length ? 'Szukaj klocków' : 'Instrukcja';
+  renderRoles();
+  viewer.setReal(false);
+  viewer.showModel(current.placements, Infinity, keepView);
 }
 
 function renderTyped() {
@@ -212,6 +293,7 @@ function show() {
   for (const button of document.querySelectorAll('[data-go]')) button.classList.toggle('on', button.dataset.go === state.view);
   $('scale').hidden = state.view !== 'find';
   $('scale').classList.toggle('on', state.real);
+  if (state.view === 'model') renderPreview(false);
   if (state.view === 'find') renderFind();
   if (state.view === 'pile') renderPile();
   if (state.view === 'build') renderBuild(false);
@@ -328,6 +410,7 @@ window.addEventListener(
       viewer.zoomBy(Math.exp(-event.deltaY * 0.012));
       return;
     }
+    if (state.view === 'model') return;
     const size = Math.abs(event.deltaX);
     if (size < Math.abs(event.deltaY) && Math.abs(gesture.dx) < 8) return;
     clearTimeout(gesture.timer);
@@ -401,9 +484,17 @@ function nudgeScale(delta) {
   if (state.real && state.view === 'find') viewer.setReal(true, pxPerLdu());
 }
 
+window.klockiRender = async () => {
+  const sheet = await viewer.sheet(current.placements);
+  const image = await (await fetch(sheet)).blob();
+  const response = await fetch(`/api/render/${state.model}`, { method: 'PUT', body: image });
+  return response.status;
+};
+
 for (const button of document.querySelectorAll('[data-go]')) button.addEventListener('click', () => go(button.dataset.go));
 for (const button of document.querySelectorAll('[data-pick]')) button.addEventListener('click', () => setTheme(button.dataset.pick));
 $('scale').addEventListener('click', toggleReal);
+$('preview-go').addEventListener('click', () => go(current.ask.length ? 'find' : 'build'));
 $('done-go').addEventListener('click', () => go('build'));
 $('build-back').addEventListener('click', () => go('find'));
 $('prev').addEventListener('click', () => turn(-1));
@@ -432,9 +523,9 @@ document.addEventListener('pointerdown', (event) => {
 $('canvas').addEventListener('dblclick', () => viewer.resetView());
 
 await load();
-$('model-name').textContent = model().name;
-$('model-size').textContent = model().size;
 applyTheme();
 renderScale();
+renderModels();
 refresh();
+state.view = Object.keys(pile()).length ? 'find' : 'model';
 show();

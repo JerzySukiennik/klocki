@@ -1,4 +1,4 @@
-// Klocki: zero-dependency local server. Static files plus the pile state in data/stan.json, bound to 127.0.0.1 only.
+// Klocki: zero-dependency local server. Static files, the pile state in data/stan.json and saved model renders, bound to 127.0.0.1 only.
 
 import { createServer } from 'node:http';
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 
 const root = dirname(fileURLToPath(import.meta.url));
 const port = Number(process.argv[2]) || 8742;
-const stateFile = join(root, 'data', 'stan.json');
+const stateFile = join(root, process.argv[3] || 'data', 'stan.json');
 const served = new Set(['index.html', 'style.css', 'src', 'lib', 'models', 'ldraw']);
 const types = {
   '.html': 'text/html; charset=utf-8',
@@ -24,14 +24,14 @@ function readBody(req) {
     let size = 0;
     req.on('data', (chunk) => {
       size += chunk.length;
-      if (size > 2_000_000) {
+      if (size > 12_000_000) {
         reject(new Error('too large'));
         req.destroy();
         return;
       }
       chunks.push(chunk);
     });
-    req.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')));
+    req.on('end', () => resolve(Buffer.concat(chunks)));
     req.on('error', reject);
   });
 }
@@ -50,7 +50,7 @@ async function state(req, res) {
     }
   }
   if (req.method === 'PUT') {
-    const text = await readBody(req);
+    const text = (await readBody(req)).toString('utf8');
     JSON.parse(text);
     await mkdir(dirname(stateFile), { recursive: true });
     await writeFile(stateFile + '.tmp', text);
@@ -60,10 +60,21 @@ async function state(req, res) {
   return send(res, 405);
 }
 
+async function render(req, res, id) {
+  if (req.method !== 'PUT') return send(res, 405);
+  const image = await readBody(req);
+  const folder = join(root, 'Niepotrzebne', 'rendery');
+  await mkdir(folder, { recursive: true });
+  await writeFile(join(folder, `${id}.png`), image);
+  return send(res, 204);
+}
+
 const server = createServer(async (req, res) => {
   try {
     const url = new URL(req.url, 'http://localhost');
     if (url.pathname === '/api/state') return await state(req, res);
+    const shot = url.pathname.match(/^\/api\/render\/([a-z0-9-]+)$/);
+    if (shot) return await render(req, res, shot[1]);
     if (req.method !== 'GET') return send(res, 405);
     const rel = normalize(decodeURIComponent(url.pathname)).replace(/^[/\\]+/, '') || 'index.html';
     if (rel.includes('..') || !served.has(rel.split(sep)[0])) return send(res, 404, 'Not found');

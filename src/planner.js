@@ -1,6 +1,6 @@
 // Klocki: greedy planner that fills every model cell with parts confirmed on the pile and lists what still has to be found.
 
-import { keyOf } from './catalog.js';
+import { keyOf, splitKey } from './catalog.js';
 
 function tally(placements) {
   const needs = new Map();
@@ -32,23 +32,37 @@ export function plan(model, pile) {
       if (!used.has(key)) order.push(key);
       used.set(key, (used.get(key) || 0) + count);
     }
-    for (const p of built) placements.push({ ...p, step: group.step(cell), group: group.id });
+    const step = group.step ? group.step(cell) : cell.step;
+    for (const p of built) placements.push({ ...p, step, group: group.id });
   };
+
+  const recipes = (group, cell) => (group.recipes ? group.recipes(cell) : group.options.map((option) => option.build(cell)));
 
   for (const group of model.groups) {
     if (group.uniform) {
-      const option = group.options.find((o) => fits(group.cells.flatMap((cell) => o.build(cell))));
-      if (option) for (const cell of group.cells) take(group, cell, option.build(cell));
-      else gaps.push({ group: group.id, label: group.label, count: group.cells.length });
+      const sets = group.cells.map((cell) => recipes(group, cell));
+      const count = Math.min(...sets.map((set) => set.length));
+      let chosen = -1;
+      for (let index = 0; index < count && chosen < 0; index += 1) {
+        if (fits(sets.flatMap((set) => set[index]))) chosen = index;
+      }
+      if (chosen < 0) gaps.push({ group: group.id, label: group.label, count: group.cells.length });
+      else group.cells.forEach((cell, index) => take(group, cell, sets[index][chosen]));
       continue;
     }
     let missing = 0;
     for (const cell of group.cells) {
-      const option = group.options.find((o) => fits(o.build(cell)));
-      if (option) take(group, cell, option.build(cell));
+      const built = recipes(group, cell).find(fits);
+      if (built) take(group, cell, built);
       else missing += 1;
     }
     if (missing) gaps.push({ group: group.id, label: group.label, count: missing });
+  }
+
+  const colours = [];
+  for (const key of order) {
+    const { color } = splitKey(key);
+    if (!colours.includes(color)) colours.push(color);
   }
 
   const ask = [];
@@ -57,6 +71,7 @@ export function plan(model, pile) {
     const total = used.get(key);
     if (total > have) ask.push({ key, need: total - have, total, have });
   }
+  ask.sort((a, b) => colours.indexOf(splitKey(a.key).color) - colours.indexOf(splitKey(b.key).color));
 
   return { placements, used, gaps, ask };
 }

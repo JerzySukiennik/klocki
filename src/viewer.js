@@ -7,7 +7,14 @@ import { RoomEnvironment } from 'three/addons/RoomEnvironment.js';
 
 const PART_DIR = new THREE.Vector3(0.62, 0.52, 0.59).normalize();
 const MODEL_DIR = new THREE.Vector3(0.56, 0.36, 0.75).normalize();
+const SHEET_DIRS = [
+  new THREE.Vector3(0, 0.1, 1).normalize(),
+  new THREE.Vector3(0.6, 0.32, 0.73).normalize(),
+  new THREE.Vector3(1, 0.1, 0.02).normalize(),
+  new THREE.Vector3(-0.55, 0.3, -0.78).normalize(),
+];
 const DISTANCE = 2000;
+const rad = (degrees) => ((degrees || 0) * Math.PI) / 180;
 
 export async function createViewer(canvas) {
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
@@ -131,7 +138,7 @@ export async function createViewer(canvas) {
   async function instance(placement, faded) {
     const object = (await template(placement.part, placement.color)).clone();
     object.position.set(placement.x || 0, placement.y || 0, placement.z || 0);
-    object.rotation.set(0, ((placement.rot || 0) * Math.PI) / 180, 0);
+    object.rotation.set(rad(placement.rx), rad(placement.rot), rad(placement.rz));
     if (faded) object.traverse(fade);
     return object;
   }
@@ -204,28 +211,45 @@ export async function createViewer(canvas) {
     spin();
   }
 
-  function boundsOf(placements) {
-    const box = new THREE.Box3();
-    for (const p of placements) {
-      box.expandByPoint(new THREE.Vector3(p.x - 20, -p.y + 4, -p.z - 20));
-      box.expandByPoint(new THREE.Vector3(p.x + 20, -p.y - 24, -p.z + 20));
-    }
-    return box;
-  }
-
   async function showModel(placements, upto, keepView) {
     const id = ++ticket;
     spinning += 1;
-    const visible = placements.filter((p) => p.step <= upto);
-    const objects = await Promise.all(visible.map((p) => instance(p, Number.isFinite(upto) && p.step < upto)));
+    const fadeOld = Number.isFinite(upto);
+    const objects = await Promise.all(placements.map((p) => instance(p, fadeOld && p.step < upto)));
     if (id !== ticket) return;
     main.root.clear();
-    for (const object of objects) main.root.add(object);
     if (!keepView) {
+      for (const object of objects) main.root.add(object);
+      main.root.updateMatrixWorld(true);
       view.margin = 1.12;
-      look(boundsOf(placements), MODEL_DIR);
+      look(new THREE.Box3().setFromObject(main.root), MODEL_DIR);
+      main.root.clear();
     }
+    placements.forEach((p, index) => {
+      if (p.step <= upto) main.root.add(objects[index]);
+    });
     draw();
+  }
+
+  function offscreen(width, height, job) {
+    const old = renderer.getSize(new THREE.Vector2());
+    const ratio = renderer.getPixelRatio();
+    renderer.setPixelRatio(1);
+    renderer.setSize(width, height, false);
+    const result = job();
+    side.root.clear();
+    renderer.setPixelRatio(ratio);
+    renderer.setSize(old.x, old.y, false);
+    draw();
+    return result;
+  }
+
+  function sideFrame(half, aspect) {
+    sideCamera.top = half;
+    sideCamera.bottom = -half;
+    sideCamera.right = half * aspect;
+    sideCamera.left = -half * aspect;
+    sideCamera.updateProjectionMatrix();
   }
 
   function thumb(part, color, size = 160) {
@@ -234,32 +258,45 @@ export async function createViewer(canvas) {
       thumbs.set(
         key,
         template(part, color).then((source) =>
-          enqueue(() => {
-            const object = source.clone();
-            side.root.add(object);
-            side.root.updateMatrixWorld(true);
-            const sphere = new THREE.Box3().setFromObject(side.root).getBoundingSphere(new THREE.Sphere());
-            const half = sphere.radius * 1.12;
-            sideCamera.top = sideCamera.right = half;
-            sideCamera.bottom = sideCamera.left = -half;
-            sideCamera.updateProjectionMatrix();
-            aim(sideCamera, sphere.center, PART_DIR);
-            const old = renderer.getSize(new THREE.Vector2());
-            const ratio = renderer.getPixelRatio();
-            renderer.setPixelRatio(1);
-            renderer.setSize(size * 2, size * 2, false);
-            renderer.render(side.scene, sideCamera);
-            const url = canvas.toDataURL('image/png');
-            side.root.remove(object);
-            renderer.setPixelRatio(ratio);
-            renderer.setSize(old.x, old.y, false);
-            draw();
-            return url;
-          }),
+          enqueue(() =>
+            offscreen(size * 2, size * 2, () => {
+              side.root.add(source.clone());
+              side.root.updateMatrixWorld(true);
+              const sphere = new THREE.Box3().setFromObject(side.root).getBoundingSphere(new THREE.Sphere());
+              sideFrame(sphere.radius * 1.12, 1);
+              aim(sideCamera, sphere.center, PART_DIR);
+              renderer.render(side.scene, sideCamera);
+              return canvas.toDataURL('image/png');
+            }),
+          ),
         ),
       );
     }
     return thumbs.get(key);
+  }
+
+  async function sheet(placements, width = 820, height = 1040) {
+    const objects = await Promise.all(placements.map((p) => instance(p, false)));
+    return enqueue(() =>
+      offscreen(width, height, () => {
+        const page = document.createElement('canvas');
+        page.width = width * SHEET_DIRS.length;
+        page.height = height;
+        const paper = page.getContext('2d');
+        paper.fillStyle = '#ffffff';
+        paper.fillRect(0, 0, page.width, page.height);
+        for (const object of objects) side.root.add(object);
+        side.root.updateMatrixWorld(true);
+        const sphere = new THREE.Box3().setFromObject(side.root).getBoundingSphere(new THREE.Sphere());
+        sideFrame(sphere.radius * 1.04, width / height);
+        SHEET_DIRS.forEach((dir, index) => {
+          aim(sideCamera, sphere.center, dir);
+          renderer.render(side.scene, sideCamera);
+          paper.drawImage(canvas, index * width, 0);
+        });
+        return page.toDataURL('image/png');
+      }),
+    );
   }
 
   function setReal(on, pxPerLdu) {
@@ -287,5 +324,5 @@ export async function createViewer(canvas) {
 
   resize();
 
-  return { showPart, showModel, thumb, setReal, setGhost, zoomBy, resetView, render };
+  return { showPart, showModel, thumb, sheet, setReal, setGhost, zoomBy, resetView, render };
 }

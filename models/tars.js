@@ -3,8 +3,8 @@
 const LAYERS = 14;
 const PIVOT = 7;
 const SCREEN = 11;
-const BODY = 71;
 const SCREEN_COLOR = 0;
+const SEAMS = [72, 0, 71];
 
 const slabX = (s) => -60 + 40 * s;
 const stepOf = (layer) => (layer < PIVOT ? layer + 1 : layer + 2);
@@ -43,25 +43,15 @@ const halfOptions = (color, z) => [
   { build: ({ s }) => levels.map((level) => plate('3023', color, s, 0, SCREEN, level, z)) },
 ];
 
-export default {
-  id: 'tars',
-  name: 'TARS',
-  size: '6,4 × 1,6 × 13,6 cm',
-  notes: {
-    1: 'Cztery osobne kolumny, każda 2×2. Buduj je obok siebie.',
-    8: 'Klocki Technic ustaw otworami w bok, tak żeby otwory wszystkich kolumn były w jednej linii.',
-    9: 'Rozsuń kolumny, włóż piny w otwory i zsuń z powrotem. To oś, na której TARS chodzi.',
-    13: 'Czarne klocki to ekrany. Wchodzą z przodu dwóch środkowych kolumn.',
-  },
-  spread: { 9: 26 },
-  groups: [
+function build({ body }) {
+  return [
     {
       id: 'pivot',
       label: 'Oś obrotu (klocki Technic)',
       uniform: true,
       cells: pivotCells,
       step: () => PIVOT + 1,
-      options: [pivotOption(72), pivotOption(0), pivotOption(71)],
+      options: [...SEAMS.filter((color) => color !== body), body].map(pivotOption),
     },
     {
       id: 'pins',
@@ -89,20 +79,20 @@ export default {
       cells: bodyCells,
       step: ({ layer }) => stepOf(layer),
       options: [
-        { build: ({ s, layer }) => [brick('3003', BODY, s, 0, layer, 0)] },
+        { build: ({ s, layer }) => [brick('3003', body, s, 0, layer, 0)] },
         {
           build: ({ s, layer }) =>
             layer % 2
-              ? [brick('3004', BODY, s, -10, layer, 0, 90), brick('3004', BODY, s, 10, layer, 0, 90)]
-              : [brick('3004', BODY, s, 0, layer, -10), brick('3004', BODY, s, 0, layer, 10)],
+              ? [brick('3004', body, s, -10, layer, 0, 90), brick('3004', body, s, 10, layer, 0, 90)]
+              : [brick('3004', body, s, 0, layer, -10), brick('3004', body, s, 0, layer, 10)],
         },
-        { build: ({ s, layer }) => levels.map((level) => plate('3022', BODY, s, 0, layer, level, 0)) },
+        { build: ({ s, layer }) => levels.map((level) => plate('3022', body, s, 0, layer, level, 0)) },
         {
           build: ({ s, layer }) =>
             levels.flatMap((level) =>
               (layer * 3 + level) % 2
-                ? [plate('3023', BODY, s, -10, layer, level, 0, 90), plate('3023', BODY, s, 10, layer, level, 0, 90)]
-                : [plate('3023', BODY, s, 0, layer, level, -10), plate('3023', BODY, s, 0, layer, level, 10)],
+                ? [plate('3023', body, s, -10, layer, level, 0, 90), plate('3023', body, s, 10, layer, level, 0, 90)]
+                : [plate('3023', body, s, 0, layer, level, -10), plate('3023', body, s, 0, layer, level, 10)],
             ),
         },
       ],
@@ -112,7 +102,24 @@ export default {
       label: 'Tył ekranów',
       cells: screenCells,
       step: () => stepOf(SCREEN),
-      options: halfOptions(BODY, 10),
+      options: halfOptions(body, 10),
     },
-  ],
+  ];
+}
+
+export default {
+  id: 'tars',
+  name: 'TARS',
+  size: '6,4 × 1,6 × 13,6 cm',
+  notes: {
+    1: 'Cztery osobne kolumny, każda 2×2. Buduj je obok siebie.',
+    8: 'Klocki Technic ustaw otworami w bok, tak żeby otwory wszystkich kolumn były w jednej linii.',
+    9: 'Rozsuń kolumny, włóż piny w otwory i zsuń z powrotem. To oś, na której TARS chodzi.',
+    13: 'Czarne klocki to ekrany. Wchodzą z przodu dwóch środkowych kolumn.',
+  },
+  spread: { 9: 26 },
+  roles: {
+    body: { label: 'Korpus', colors: [71, 72] },
+  },
+  build,
 };

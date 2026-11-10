@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Klocki</title>
+<link rel="icon" href="data:,">
 <link rel="stylesheet" href="style.css">
 <script type="importmap">
 { "imports": { "three": "./lib/three.module.js", "three/addons/": "./lib/addons/" } }
@@ -14,10 +15,10 @@
 <header class="bar">
   <div class="brand">
     <span class="mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
-    <strong id="model-name"></strong>
-    <span class="muted" id="model-size"></span>
+    <div class="models" id="models"></div>
   </div>
   <nav class="tabs">
+    <button data-go="model">Model</button>
     <button data-go="find">Szukaj</button>
     <button data-go="pile">Kupka <span class="badge" id="pile-count"></span></button>
     <button data-go="build">Instrukcja</button>
@@ -39,6 +40,13 @@
 
     <div class="verdict no" id="no">Nie mam</div>
     <div class="verdict yes" id="yes">Mam</div>
+
+    <div class="model-only panel">
+      <h2 id="preview-title"></h2>
+      <p id="preview-text"></p>
+      <div class="roles" id="roles"></div>
+      <button class="go" id="preview-go"></button>
+    </div>
 
     <div class="find-only progress" id="progress"></div>
     <div class="find-only typed" id="typed" hidden></div>
