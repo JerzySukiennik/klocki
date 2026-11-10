@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Klocki</title>
+<link rel="stylesheet" href="style.css">
+<script type="importmap">
+{ "imports": { "three": "./lib/three.module.js", "three/addons/": "./lib/addons/" } }
+</script>
+</head>
+<body data-theme="biel" data-view="find">
+
+<header class="bar">
+  <div class="brand">
+    <span class="mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+    <strong id="model-name"></strong>
+    <span class="muted" id="model-size"></span>
+  </div>
+  <nav class="tabs">
+    <button data-go="find">Szukaj</button>
+    <button data-go="pile">Kupka <span class="badge" id="pile-count"></span></button>
+    <button data-go="build">Instrukcja</button>
+  </nav>
+  <div class="tools">
+    <button class="pill" id="scale" title="Prawdziwy rozmiar klocka na ekranie (klawisz S)">1:1</button>
+    <div class="themes" title="Wygląd (klawisz T)">
+      <button data-pick="biel" aria-label="Wygląd: biel"></button>
+      <button data-pick="noc" aria-label="Wygląd: noc"></button>
+      <button data-pick="papier" aria-label="Wygląd: papier"></button>
+    </div>
+    <button class="pill" id="menu" aria-label="Ustawienia">⋯</button>
+  </div>
+</header>
+
+<main>
+  <section class="stage" id="stage">
+    <div class="card" id="card"><canvas id="canvas"></canvas></div>
+
+    <div class="verdict no" id="no">Nie mam</div>
+    <div class="verdict yes" id="yes">Mam</div>
+
+    <div class="find-only progress" id="progress"></div>
+    <div class="find-only typed" id="typed" hidden></div>
+
+    <div class="find-only info" id="find-info">
+      <div class="count" id="count"></div>
+      <div class="more" id="more"></div>
+      <div class="name" id="name"></div>
+      <div class="meta">
+        <span class="swatch" id="swatch"></span>
+        <span id="color"></span>
+        <span class="muted" id="number"></span>
+      </div>
+      <p class="hint" id="hint"></p>
+    </div>
+
+    <div class="find-only keys" id="keys">
+      <span><kbd>←</kbd> nie mam</span>
+      <span><kbd>→</kbd> mam</span>
+      <span><kbd>0-9</kbd> mam tylko tyle</span>
+      <span><kbd>Z</kbd> cofnij</span>
+    </div>
+
+    <div class="find-only panel" id="find-done" hidden>
+      <h2 id="done-title"></h2>
+      <p id="done-text"></p>
+      <button class="go" id="done-go">Instrukcja</button>
+    </div>
+
+    <div class="build-only panel" id="build-wait" hidden>
+      <h2>Jeszcze nie teraz</h2>
+      <p id="build-wait-text"></p>
+      <button class="go" id="build-back">Wróć do szukania</button>
+    </div>
+
+    <div class="build-only" id="build-ui" hidden>
+      <div class="info">
+        <div class="step"><span id="step-now"></span><small>z <span id="step-all"></span></small></div>
+        <p class="note" id="step-note"></p>
+        <p class="hint" id="build-gaps"></p>
+      </div>
+      <div class="strip" id="step-parts"></div>
+      <div class="pager">
+        <button class="round" id="prev" aria-label="Poprzedni krok">‹</button>
+        <button class="round" id="next" aria-label="Następny krok">›</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="pile" id="pile">
+    <h2 id="pile-total"></h2>
+    <div class="grid" id="pile-grid"></div>
+    <div class="notes" id="pile-out"></div>
+    <div class="notes" id="pile-gaps"></div>
+  </section>
+</main>
+
+<div class="sheet" id="sheet" hidden>
+  <label class="row"><span>Odwróć kierunek machnięcia</span><input type="checkbox" id="flip"></label>
+  <div class="row">
+    <span>Skala 1:1</span>
+    <span class="stepper"><button id="scale-down">−</button><b id="scale-value"></b><button id="scale-up">+</button></span>
+  </div>
+  <p class="muted small">Włącz 1:1, przyłóż klocek do ekranu i dopasuj plusem lub minusem.</p>
+  <button class="row plain" id="reset">Zacznij szukanie od nowa</button>
+</div>
+
+<script type="module" src="src/app.js"></script>
+</body>
+</html>
