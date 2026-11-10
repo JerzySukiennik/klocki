@@ -2500,6 +2500,34 @@
 4 16 3.827 0 -9.239 7.071 0 -7.071 6.3639 0 -6.3639 3.4443 0 -8.3151
 4 16 7.071 0 -7.071 9.239 0 -3.827 8.3151 0 -3.4443 6.3639 0 -6.3639
 4 16 9.239 0 -3.827 10 0 0 9 0 0 8.3151 0 -3.4443
+0 FILE 3069b.dat
+0 Tile  1 x  2 with Groove
+0 Name: 3069b.dat
+0 Author: Santeri Piippo [arezey]
+0 !LDRAW_ORG Part UPDATE 2010-02
+0 !LICENSE Licensed under CC BY 4.0 : see CAreadme.txt
+0 BFC CERTIFY CCW
+4 16 20 0 -10 20 0 10 -20 0 10 -20 0 -10
+1 16 0 0 0 1 0 0 0 1 0 0 0 1 s\3069bs01.dat
+0 FILE parts/s/3069bs01.dat
+0 ~Tile  1 x  2 with Groove without Top Face
+0 Name: s\3069bs01.dat
+0 Author: Santeri Piippo [arezey]
+0 !LDRAW_ORG Subpart UPDATE 2010-02
+0 !LICENSE Licensed under CC BY 4.0 : see CAreadme.txt
+0 BFC CERTIFY CCW
+1 16 0 0 0 20 0 0 0 7 0 0 0 10 box4.dat
+1 16 0 7 0 19 0 0 0 1 0 0 0 9 box4.dat
+0 BFC INVERTNEXT
+1 16 0 8 0 16 0 0 0 -4 0 0 0 6 box5.dat
+4 16 -19 8 9 -16 8 6 -16 8 -6 -19 8 -9
+4 16 19 8 -9 16 8 -6 16 8 6 19 8 9
+4 16 19 8 9 16 8 6 -16 8 6 -19 8 9
+4 16 -19 8 -9 -16 8 -6 16 8 -6 19 8 -9
+4 16 -20 7 10 -19 7 9 -19 7 -9 -20 7 -10
+4 16 20 7 -10 19 7 -9 19 7 9 20 7 10
+4 16 20 7 10 19 7 9 -19 7 9 -20 7 10
+4 16 -20 7 -10 -19 7 -9 19 7 -9 20 7 -10
 0 FILE 3068b.dat
 0 Tile  2 x  2 with Groove
 0 Name: 3068b.dat

@@ -95,10 +95,24 @@ function build({ hair, skin, shoes }) {
     const plain = (j) => ({ part: '3005', color: BLACK, x: xAt(i), y: yAt(10, 3), z: zAt(j), rot: 0 });
     const side = (part, color, layer, y, j = 1.5) => ({ part, color, x: sign * (48 + 8 * layer), y, z: zAt(j), rz: sign * 90, step: 7 });
     const upper = side('3021', BLACK, 0, -74);
+    const band = (part, color, layer, y) => ({ ...side(part, color, layer, y), rx: 90 });
+    const shoulder = { part: '85984', color: BLACK, x: sign * 48, y: -94, z: zAt(1.5), rx: -90, rz: sign * 90, step: 7 };
     const sleeve = (part) => side(part, BLACK, 1, -84);
-    const palm = { ...side('3023', skin, 1, -54), rx: 90 };
+    const palm = band('3023', skin, 1, -54);
     const fingers = [1, 2].map((j) => side('4073', skin, 1, -54, j));
+    const thick = (cuff) => [
+      socket(1),
+      socket(2),
+      upper,
+      shoulder,
+      band('3023', BLACK, 1, -74),
+      band(cuff, BLACK, 2, -74),
+      palm,
+      band('3023', skin, 2, -54),
+    ];
     return loose(6, [
+      thick('3069b'),
+      thick('3023'),
       [socket(1), socket(2), upper, sleeve('3068b'), palm],
       [socket(1), socket(2), upper, sleeve('3022'), palm],
       [socket(1), socket(2), upper, sleeve('3022'), ...fingers],
@@ -263,7 +277,7 @@ export default {
   notes: {
     2: 'Buty wystają o jedną wypustkę przed nogi.',
     6: 'Klocki z wypustką z boku: po dwa na każdy bok (na ręce) i dwa do tyłu (na kaptur). Żółty i biały klocek z przodu to znaczek na bluzie.',
-    7: 'Ręka to czarna płytka 2×3 wciśnięta pionowo górą na dwie boczne wypustki. Na jej górę idzie gładki kafelek (rękaw), na sam dół żółta płytka (dłoń).',
+    7: 'Ręka to czarna płytka 2×3 wciśnięta pionowo górą na dwie boczne wypustki. Na nią od góry: skos cienkim końcem do góry (bark), dwie czarne warstwy (rękaw) i dwie żółte płytki (dłoń).',
     9: 'Głowa jest pusta w środku. Tył już z koloru włosów.',
     10: 'Oko to klocek z wypustką do przodu i czarny okrągły kafelek na wypustce.',
     12: 'Grzywkę przyczep od spodu do przedniej płytki dachu, dopiero potem załóż tę płytkę na głowę.',
