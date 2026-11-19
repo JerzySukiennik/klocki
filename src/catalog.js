@@ -1,5 +1,7 @@
 // Klocki: part and colour catalogue (LDraw ids and colour codes) with Polish display names.
 
+export const ANY = 9001;
+
 export const PARTS = {
   3005: { name: 'Klocek 1×1' },
   3004: { name: 'Klocek 1×2' },
@@ -23,25 +25,36 @@ export const PARTS = {
   3020: { name: 'Płytka 2×4' },
   3795: { name: 'Płytka 2×6' },
   3034: { name: 'Płytka 2×8' },
+  3832: { name: 'Płytka 2×10' },
+  2445: { name: 'Płytka 2×12' },
+  4282: { name: 'Płytka 2×16' },
   3031: { name: 'Płytka 4×4' },
   3032: { name: 'Płytka 4×6' },
   3035: { name: 'Płytka 4×8' },
+  3030: { name: 'Płytka 4×10' },
   3958: { name: 'Płytka 6×6' },
   3036: { name: 'Płytka 6×8' },
   41539: { name: 'Płytka 8×8' },
+  91405: { name: 'Płytka 16×16' },
   4073: { name: 'Płytka okrągła 1×1' },
   '4032a': { name: 'Płytka okrągła 2×2' },
+  60474: { name: 'Płytka okrągła 4×4' },
   98138: { name: 'Kafelek okrągły 1×1' },
   14769: { name: 'Kafelek okrągły 2×2' },
   '3070b': { name: 'Kafelek 1×1' },
   '3069b': { name: 'Kafelek 1×2' },
   '3068b': { name: 'Kafelek 2×2' },
+  2431: { name: 'Kafelek 1×4' },
+  87079: { name: 'Kafelek 2×4' },
   54200: { name: 'Skos 1×1 (serek)' },
   85984: { name: 'Skos niski 1×2' },
   11477: { name: 'Skos łukowy 1×2' },
   15068: { name: 'Skos łukowy 2×2' },
+  3039: { name: 'Skos dachowy 2×2' },
+  3037: { name: 'Skos dachowy 2×4' },
   87087: { name: 'Klocek 1×1 z wypustką z boku' },
   11211: { name: 'Klocek 1×2 z dwiema wypustkami z boku' },
+  30414: { name: 'Klocek 1×4 z wypustkami z boku' },
   3700: { name: 'Klocek Technic 1×2 z otworem' },
   2780: { name: 'Pin Technic z tarciem' },
 };
@@ -78,6 +91,13 @@ export const COLORS = {
     lego: 'Dark Bluish Gray',
     hex: '#6c6e68',
     hint: 'Chłodny grafit. Stary ciemnoszary wpada w brąz, nie mieszaj ich.',
+  },
+  [ANY]: {
+    name: 'Dowolny kolor',
+    lego: 'schowany w środku',
+    hex: '#c9ccd1',
+    ldraw: 151,
+    hint: 'Ten klocek siedzi w środku i nie będzie go widać. Weź w jakimkolwiek kolorze.',
   },
 };
 

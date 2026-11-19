@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import { LDrawLoader } from 'three/addons/LDrawLoader.js';
 import { OrbitControls } from 'three/addons/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/RoomEnvironment.js';
+import { COLORS } from './catalog.js';
 
 const PART_DIR = new THREE.Vector3(0.62, 0.52, 0.59).normalize();
 const MODEL_DIR = new THREE.Vector3(0.56, 0.36, 0.75).normalize();
@@ -113,7 +114,7 @@ export async function createViewer(canvas) {
         enqueue(
           () =>
             new Promise((resolve, reject) => {
-              let text = `1 ${color} 0 0 0 1 0 0 0 1 0 0 0 1 ${part}.dat\n`;
+              let text = `1 ${COLORS[color]?.ldraw ?? color} 0 0 0 1 0 0 0 1 0 0 0 1 ${part}.dat\n`;
               if (packText) {
                 text += packText;
                 packText = null;
